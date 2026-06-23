@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+client/node_modules/
+server/node_modules/
+
+# Environment — never commit real secrets
+.env
+server/.env
+
+# Build output — Render builds this itself
+client/dist/
+
+# Vite cache
+client/.vite/
+
+# Editor / OS
+.DS_Store
+*.log
+npm-debug.log*
+
+# Claude Code memory (local-only)
+.claude/
