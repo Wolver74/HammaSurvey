@@ -393,11 +393,16 @@ export default function Survey() {
       <StickyProgress step={step} />
 
       {/* Hero Banner */}
-      <div style={{ lineHeight: 0 }}>
+      <div style={{
+        backgroundColor: '#02315e',
+        display: 'flex',
+        justifyContent: 'center',
+        lineHeight: 0,
+      }}>
         <img
           src="/WhatsApp%20Image%202026-07-01%20at%2016.16.32.jpeg"
           alt="Fahmi — Protection et conseil 24/7"
-          style={{ width: '100%', display: 'block', height: 'auto' }}
+          style={{ width: '100%', maxWidth: '520px', display: 'block', height: 'auto' }}
         />
       </div>
 
