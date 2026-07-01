@@ -2,14 +2,14 @@ import { Routes, Route, useLocation } from 'react-router-dom'
 import { AnimatePresence, motion } from 'framer-motion'
 import Survey from './pages/Survey'
 import Dashboard from './pages/Dashboard'
-import Navbar from './components/Navbar'
+import WelcomeModal from './components/WelcomeModal'
 
 export default function App() {
   const location = useLocation()
 
   return (
     <div style={{ minHeight: '100svh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar />
+      <WelcomeModal />
       <AnimatePresence mode="wait" initial={false}>
         <motion.main
           key={location.pathname}

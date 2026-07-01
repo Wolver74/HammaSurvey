@@ -8,7 +8,7 @@ const ResponseSchema = new mongoose.Schema({
   insuranceCompany: { type: String, required: true },
   satisfactionScore: { type: Number, min: 1, max: 10, required: true },
   hasLifeInsurance: { type: Boolean, required: true },
-  lifeInsuranceType: { type: String, enum: ['maladie', 'groupe', 'both', 'none'], default: 'none' },
+  lifeInsuranceType: { type: String, default: 'none' },
   annualPremium: { type: Number, required: true },
   switchReasons: [{ type: String }],
   interested: { type: Boolean, required: true },

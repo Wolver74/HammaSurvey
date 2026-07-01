@@ -1,14 +1,15 @@
-import { useState, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import api from '../api'
 import {
-  CheckCircle, ChevronLeft, ChevronRight, Send, Shield,
+  CheckCircle, ChevronLeft, ChevronRight, Send,
   BadgePercent, Trophy, Home, FileText, Star, Check,
 } from 'lucide-react'
 
 const STEPS = ['Informations', 'Assurance', 'Changement', 'Contact']
 
 const COMPANIES = ["Lloyd's", 'Maghrebia', 'Carte', 'STAR', 'COMAR', 'GAT', 'BH Assurance', 'Autre']
+const INSURANCE_TYPES = ['Auto', 'Habitation', 'Vie', 'Santé', 'Risques divers', 'Responsabilité civile']
 const AGE_RANGES = ['18-25', '26-35', '36-45', '46-55', '56-65', '65+']
 const SWITCH_REASONS_OPTIONS = [
   'Crédibilité', 'Fiabilité', 'Réputation',
@@ -124,7 +125,7 @@ const CALLOUT_CONFIG = [
   { icon: BadgePercent, color: '#F37021', bg: '#FFF7ED', borderColor: '#FDBA74', text: 'Commission de 20% — Je perçois une commission de 20% sur votre contrat, sans coût supplémentaire pour vous.' },
   { icon: Trophy,      color: '#D97706', bg: '#FFFBEB', borderColor: '#FCD34D', text: 'Offre exclusive — Les 10 premiers clients bénéficient d\'un service sans commission.' },
   { icon: Home,        color: '#005BAA', bg: '#EFF6FF', borderColor: '#93C5FD', text: 'Service à domicile — Livraison de quittance et contrat directement chez vous.' },
-  { icon: FileText,    color: '#059669', bg: '#F0FDF4', borderColor: '#6EE7B7', text: 'Devis instantané — Proforma disponible sur demande, établie entre 8h et 10h.' },
+  { icon: FileText,    color: '#059669', bg: '#F0FDF4', borderColor: '#6EE7B7', text: 'Devis instantané' },
   { icon: Star,        color: '#7c3aed', bg: '#F5F3FF', borderColor: '#C4B5FD', text: 'Suivi qualité — Un suivi de satisfaction personnalisé après signature de votre contrat.' },
 ]
 
@@ -190,6 +191,79 @@ const stepVariants = {
   exit: (dir) => ({ x: dir > 0 ? '-60%' : '60%', opacity: 0 }),
 }
 
+function StickyProgress({ step }) {
+  const [visible, setVisible] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setVisible(window.scrollY > 280)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
+
+  const pct = Math.round((step / (STEPS.length - 1)) * 100)
+
+  return (
+    <AnimatePresence>
+      {visible && (
+        <motion.div
+          initial={{ y: -48, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          exit={{ y: -48, opacity: 0 }}
+          transition={{ type: 'spring', stiffness: 340, damping: 30 }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 50,
+            backgroundColor: 'white',
+            boxShadow: '0 2px 12px rgba(0,0,0,0.12)',
+          }}
+        >
+          <div style={{
+            maxWidth: '680px',
+            margin: '0 auto',
+            padding: '0.65rem 1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.875rem',
+          }}>
+            <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
+              {STEPS.map((_, i) => (
+                <div key={i} style={{
+                  width: i === step ? '1.5rem' : '0.45rem',
+                  height: '0.45rem',
+                  borderRadius: '9999px',
+                  backgroundColor: i <= step ? '#F37021' : '#e5e7eb',
+                  transition: 'all 0.3s ease',
+                }} />
+              ))}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ fontSize: '0.72rem', color: '#9ca3af', fontWeight: 500 }}>
+                Étape {step + 1} sur {STEPS.length}
+              </div>
+              <div style={{ fontSize: '0.85rem', color: '#003B73', fontWeight: 700, lineHeight: 1.2 }}>
+                {STEPS[step]}
+              </div>
+            </div>
+            <div style={{ fontSize: '0.75rem', color: '#F37021', fontWeight: 700, flexShrink: 0 }}>
+              {pct}%
+            </div>
+          </div>
+          <div style={{ height: '3px', backgroundColor: '#f3f4f6' }}>
+            <motion.div
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.4, ease: 'easeInOut' }}
+              style={{ height: '100%', backgroundColor: '#F37021' }}
+            />
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
 export default function Survey() {
   const [step, setStep] = useState(0)
   const [direction, setDirection] = useState(1)
@@ -239,13 +313,9 @@ export default function Survey() {
     setSubmitting(true)
     setSubmitError('')
     try {
-      let lifeInsuranceType = 'none'
-      if (form.hasLifeInsurance) {
-        const has = (t) => form.lifeInsuranceType.includes(t)
-        if (has('maladie') && has('groupe')) lifeInsuranceType = 'both'
-        else if (has('maladie')) lifeInsuranceType = 'maladie'
-        else if (has('groupe')) lifeInsuranceType = 'groupe'
-      }
+      const lifeInsuranceType = form.hasLifeInsurance && form.lifeInsuranceType.length
+        ? form.lifeInsuranceType.join(', ')
+        : 'none'
       await api.post('/api/responses', {
         ageRange: form.ageRange, fullName: form.fullName, email: form.email,
         profession: form.profession, insuranceCompany: form.insuranceCompany,
@@ -320,28 +390,15 @@ export default function Survey() {
 
   return (
     <div style={{ backgroundColor: '#f9fafb', minHeight: '100vh' }}>
+      <StickyProgress step={step} />
+
       {/* Hero Banner */}
-      <div style={{
-        background: 'linear-gradient(135deg, #003B73 0%, #005BAA 100%)',
-        padding: '2.75rem 1.5rem',
-      }}>
-        <div style={{ maxWidth: '680px', margin: '0 auto', textAlign: 'center', color: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-            <div style={{ backgroundColor: '#F37021', borderRadius: '0.75rem', padding: '0.6rem', display: 'flex' }}>
-              <Shield color="white" size={28} />
-            </div>
-            <div style={{ textAlign: 'left' }}>
-              <div style={{ fontWeight: 800, fontSize: '1.25rem', lineHeight: 1.1 }}>AL Maghrebia</div>
-              <div style={{ color: '#F37021', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', fontWeight: 500 }}>Assurance</div>
-            </div>
-          </div>
-          <h1 style={{ fontSize: 'clamp(1.5rem, 4vw, 2.25rem)', fontWeight: 800, margin: '0 0 0.75rem', lineHeight: 1.2 }}>
-            Évaluez votre couverture d'assurance
-          </h1>
-          <p style={{ color: '#bfdbfe', fontSize: '1rem', margin: 0, lineHeight: 1.6 }}>
-            Quelques minutes pour découvrir si vous bénéficiez de la meilleure protection
-          </p>
-        </div>
+      <div style={{ lineHeight: 0 }}>
+        <img
+          src="/WhatsApp%20Image%202026-07-01%20at%2016.16.32.jpeg"
+          alt="Fahmi — Protection et conseil 24/7"
+          style={{ width: '100%', display: 'block', height: 'auto' }}
+        />
       </div>
 
       {/* Step indicator */}
@@ -507,7 +564,7 @@ export default function Survey() {
                     </Fade>
                     <Fade delay={0.21}>
                       <div>
-                        <label className="form-label">Avez-vous une assurance vie ? *</label>
+                        <label className="form-label">Êtes-vous déjà assuré(e) ? *</label>
                         <div style={{ display: 'flex', gap: '1rem' }}>
                           {[{ label: 'Oui', value: true }, { label: 'Non', value: false }].map(opt => (
                             <button
@@ -542,22 +599,25 @@ export default function Survey() {
                               style={{ overflow: 'hidden' }}
                             >
                               <div style={{ marginTop: '0.875rem', padding: '1rem', backgroundColor: '#f9fafb', borderRadius: '0.625rem', border: '1px solid #e5e7eb' }}>
-                                <label className="form-label" style={{ marginBottom: '0.75rem' }}>Type d'assurance vie</label>
-                                {['maladie', 'groupe'].map(type => (
-                                  <label key={type} style={{
-                                    display: 'flex', alignItems: 'center', gap: '0.5rem',
-                                    cursor: 'pointer', marginBottom: '0.5rem',
-                                    fontSize: '0.9rem', color: '#374151',
-                                  }}>
-                                    <input
-                                      type="checkbox"
-                                      checked={form.lifeInsuranceType.includes(type)}
-                                      onChange={() => toggleLifeInsuranceType(type)}
-                                      style={{ width: '1.1rem', height: '1.1rem', accentColor: '#F37021' }}
-                                    />
-                                    {type === 'maladie' ? 'Maladie' : 'Groupe'}
-                                  </label>
-                                ))}
+                                <label className="form-label" style={{ marginBottom: '0.75rem' }}>Type(s) d'assurance</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.375rem 0.75rem' }}>
+                                  {INSURANCE_TYPES.map(type => (
+                                    <label key={type} style={{
+                                      display: 'flex', alignItems: 'center', gap: '0.5rem',
+                                      cursor: 'pointer',
+                                      fontSize: '0.875rem', color: '#374151',
+                                      padding: '0.25rem 0',
+                                    }}>
+                                      <input
+                                        type="checkbox"
+                                        checked={form.lifeInsuranceType.includes(type)}
+                                        onChange={() => toggleLifeInsuranceType(type)}
+                                        style={{ width: '1.1rem', height: '1.1rem', accentColor: '#F37021', flexShrink: 0 }}
+                                      />
+                                      {type}
+                                    </label>
+                                  ))}
+                                </div>
                               </div>
                             </motion.div>
                           )}

@@ -28,7 +28,7 @@ export default function Navbar() {
             <Shield color="white" size={24} />
           </div>
           <div>
-            <div style={{ color: 'white', fontWeight: 700, fontSize: '1.125rem', lineHeight: 1.2 }}>AL Maghrebia</div>
+            <div style={{ color: 'white', fontWeight: 700, fontSize: '1.125rem', lineHeight: 1.2 }}>Fahmi</div>
             <div style={{ color: '#F37021', fontSize: '0.65rem', fontWeight: 500, letterSpacing: '0.15em', textTransform: 'uppercase' }}>Assurance</div>
           </div>
         </Link>
